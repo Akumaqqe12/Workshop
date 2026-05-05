@@ -1,0 +1,417 @@
+﻿<UserControl x:Class="MusicRepairShop.Views.MastersView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:MusicRepairShop.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="800">
+    
+    <UserControl.DataContext>
+        <local:MastersViewModel/>
+    </UserControl.DataContext>
+    
+    <UserControl.Resources>
+        <Style x:Key="MasterCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="#ffffff"/>
+            <Setter Property="BorderBrush" Value="#e0e0e0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="5"/>
+            <Setter Property="Padding" Value="15"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" Value="#2196f3"/>
+                    <Setter Property="Background" Value="#f5fbff"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Панель инструментов -->
+        <Border Grid.Row="0" Background="#f5f5f5" Padding="10">
+            <StackPanel Orientation="Horizontal">
+                <TextBox Width="250" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
+                         Margin="0,0,10,0" 
+                         ToolTip="Поиск по ФИО, специализации или телефону">
+                    <TextBox.Style>
+                        <Style TargetType="TextBox">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="TextBox">
+                                        <Border Background="{TemplateBinding Background}" 
+                                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                                CornerRadius="3">
+                                            <Grid>
+                                                <ScrollViewer x:Name="PART_ContentHost" 
+                                                              VerticalAlignment="Center"/>
+                                                <TextBlock Text="🔍 Поиск мастеров..." 
+                                                           IsHitTestVisible="False" 
+                                                           VerticalAlignment="Center" 
+                                                           Margin="5,0,0,0"
+                                                           Foreground="Gray"
+                                                           Visibility="{Binding Text, 
+                                                                        RelativeSource={RelativeSource TemplatedParent},
+                                                                        Converter={StaticResource StringToVisibilityConverter}}"/>
+                                            </Grid>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </TextBox.Style>
+                </TextBox>
+                
+                <Button Content="Добавить" Command="{Binding AddCommand}" 
+                        Style="{StaticResource AddButtonStyle}" Margin="0,0,5,0"/>
+                <Button Content="Сохранить" Command="{Binding SaveCommand}" 
+                        Style="{StaticResource SaveButtonStyle}" Margin="0,0,5,0"/>
+                <Button Content="Удалить" Command="{Binding DeleteCommand}" 
+                        Style="{StaticResource DeleteButtonStyle}" Margin="0,0,10,0"/>
+                <Button Content="Обновить" Command="{Binding RefreshCommand}" 
+                        Style="{StaticResource RefreshButtonStyle}"/>
+                
+                <Separator Width="20" Visibility="Hidden"/>
+                
+                <CheckBox IsChecked="{Binding ShowOnlyActive}" 
+                          Content="Только активные"
+                          VerticalAlignment="Center" Margin="10,0,0,0"/>
+            </StackPanel>
+        </Border>
+        
+        <!-- Основной контент -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="400"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- Список мастеров -->
+            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Padding="10">
+                <ItemsControl ItemsSource="{Binding Masters}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource MasterCardStyle}"
+                                    Tag="{Binding}">
+                                <Border.InputBindings>
+                                    <MouseBinding MouseAction="LeftClick" 
+                                                  Command="{Binding DataContext.SelectMasterCommand, 
+                                                          RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                  CommandParameter="{Binding}"/>
+                                </Border.InputBindings>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <!-- Аватар -->
+                                    <Border Grid.Column="0" Width="50" Height="50" 
+                                            Background="#3498db" CornerRadius="25"
+                                            Margin="0,0,15,0">
+                                        <TextBlock Text="{Binding FirstName, StringFormat={}{0:0}}" 
+                                                   Foreground="White" FontSize="20"
+                                                   FontWeight="Bold" 
+                                                   HorizontalAlignment="Center" 
+                                                   VerticalAlignment="Center"/>
+                                    </Border>
+                                    
+                                    <!-- Информация -->
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="{Binding FullName}" 
+                                                   FontSize="16" FontWeight="Bold" 
+                                                   Foreground="#2c3e50"/>
+                                        <TextBlock Text="{Binding Specialization}" 
+                                                   Foreground="#7f8c8d" Margin="0,2,0,5"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="Ставка:" Margin="0,0,5,0"/>
+                                            <TextBlock Text="{Binding SalaryRate, StringFormat=C2}" 
+                                                       FontWeight="SemiBold"/>
+                                            <TextBlock Text=" | Комиссия:" Margin="5,0,5,0"/>
+                                            <TextBlock Text="{Binding CommissionRate, StringFormat=F1}" 
+                                                       FontWeight="SemiBold"/>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding Phone}" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                    
+                                    <!-- Статус -->
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                        <Border Background="{Binding IsActive, 
+                                                              Converter={StaticResource BoolToStatusColorConverter}}"
+                                                CornerRadius="3" Padding="5,2" 
+                                                HorizontalAlignment="Right">
+                                            <TextBlock Text="{Binding IsActive, 
+                                                               Converter={StaticResource BoolToStatusTextConverter}}"
+                                                       Foreground="White" FontWeight="Bold" 
+                                                       FontSize="11"/>
+                                        </Border>
+                                        <TextBlock Text="{Binding HireDate, StringFormat='Работает с: d MMM yyyy'}" 
+                                                   FontSize="10" Foreground="#95a5a6"
+                                                   Margin="0,5,0,0"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+            
+            <!-- Форма редактирования -->
+            <Border Grid.Column="1" Background="White" Padding="20">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="Редактирование мастера" 
+                                   FontSize="16" FontWeight="Bold" 
+                                   Margin="0,0,0,20" Foreground="#2c3e50"/>
+                        
+                        <!-- Личная информация -->
+                        <Border Background="#f8f9fa" Padding="15" CornerRadius="5" Margin="0,0,0,15">
+                            <StackPanel>
+                                <TextBlock Text="Личная информация" 
+                                           FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    
+                                    <TextBlock Text="Фамилия:" Grid.Row="0" Grid.Column="0" 
+                                               Width="100" Margin="0,0,10,5"/>
+                                    <TextBox Text="{Binding EditingMaster.LastName}" 
+                                             Grid.Row="0" Grid.Column="1">
+                                        <TextBox.Style>
+                                            <Style TargetType="TextBox">
+                                                <Style.Triggers>
+                                                    <Trigger Property="Validation.HasError" Value="true">
+                                                        <Setter Property="ToolTip" 
+                                                                Value="{Binding RelativeSource={x:Static RelativeSource.Self},
+                                                                        Path=(Validation.Errors)[0].ErrorContent}"/>
+                                                        <Setter Property="Background" Value="#fff0f0"/>
+                                                        <Setter Property="BorderBrush" Value="#ff9999"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBox.Style>
+                                    </TextBox>
+                                    
+                                    <TextBlock Text="Имя:" Grid.Row="1" Grid.Column="0" 
+                                               Width="100" Margin="0,0,10,5"/>
+                                    <TextBox Text="{Binding EditingMaster.FirstName}" 
+                                             Grid.Row="1" Grid.Column="1">
+                                        <TextBox.Style>
+                                            <Style TargetType="TextBox">
+                                                <Style.Triggers>
+                                                    <Trigger Property="Validation.HasError" Value="true">
+                                                        <Setter Property="ToolTip" 
+                                                                Value="{Binding RelativeSource={x:Static RelativeSource.Self},
+                                                                        Path=(Validation.Errors)[0].ErrorContent}"/>
+                                                        <Setter Property="Background" Value="#fff0f0"/>
+                                                        <Setter Property="BorderBrush" Value="#ff9999"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBox.Style>
+                                    </TextBox>
+                                    
+                                    <TextBlock Text="Отчество:" Grid.Row="2" Grid.Column="0" 
+                                               Width="100" Margin="0,0,10,5"/>
+                                    <TextBox Text="{Binding EditingMaster.MiddleName}" 
+                                             Grid.Row="2" Grid.Column="1"/>
+                                    
+                                    <TextBlock Text="Телефон:" Grid.Row="3" Grid.Column="0" 
+                                               Width="100" Margin="0,0,10,5"/>
+                                    <TextBox Text="{Binding EditingMaster.Phone}" 
+                                             Grid.Row="3" Grid.Column="1"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Профессиональная информация -->
+                        <Border Background="#e8f4fd" Padding="15" CornerRadius="5" Margin="0,0,0,15">
+                            <StackPanel>
+                                <TextBlock Text="Профессиональная информация" 
+                                           FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    
+                                    <TextBlock Text="Специализация:" Grid.Row="0" Grid.Column="0" 
+                                               Width="100" Margin="0,0,10,5"/>
+                                    <ComboBox IsEditable="True" Grid.Row="0" Grid.Column="1"
+                                              Text="{Binding EditingMaster.Specialization, UpdateSourceTrigger=PropertyChanged}">
+                                        <ComboBox.Items>
+                                            <ComboBoxItem Content="Гитары"/>
+                                            <ComboBoxItem Content="Клавишные"/>
+                                            <ComboBoxItem Content="Духовые"/>
+                                            <ComboBoxItem Content="Струнные"/>
+                                            <ComboBoxItem Content="Ударные"/>
+                                            <ComboBoxItem Content="Общий ремонт"/>
+                                        </ComboBox.Items>
+                                    </ComboBox>
+                                    
+                                    <TextBlock Text="Ставка:" Grid.Row="1" Grid.Column="0" 
+                                               Width="100" Margin="0,0,10,5"/>
+                                    <TextBox Text="{Binding EditingMaster.SalaryRate}" 
+                                             Grid.Row="1" Grid.Column="1">
+                                        <TextBox.Style>
+                                            <Style TargetType="TextBox">
+                                                <Style.Triggers>
+                                                    <Trigger Property="Validation.HasError" Value="true">
+                                                        <Setter Property="ToolTip" 
+                                                                Value="{Binding RelativeSource={x:Static RelativeSource.Self},
+                                                                        Path=(Validation.Errors)[0].ErrorContent}"/>
+                                                        <Setter Property="Background" Value="#fff0f0"/>
+                                                        <Setter Property="BorderBrush" Value="#ff9999"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBox.Style>
+                                    </TextBox>
+                                    
+                                    <TextBlock Text="Комиссия:" Grid.Row="2" Grid.Column="0" 
+                                               Width="100" Margin="0,0,10,5"/>
+                                    <TextBox Text="{Binding EditingMaster.CommissionRate}" 
+                                             Grid.Row="2" Grid.Column="1">
+                                        <TextBox.Style>
+                                            <Style TargetType="TextBox">
+                                                <Style.Triggers>
+                                                    <Trigger Property="Validation.HasError" Value="true">
+                                                        <Setter Property="ToolTip" 
+                                                                Value="{Binding RelativeSource={x:Static RelativeSource.Self},
+                                                                        Path=(Validation.Errors)[0].ErrorContent}"/>
+                                                        <Setter Property="Background" Value="#fff0f0"/>
+                                                        <Setter Property="BorderBrush" Value="#ff9999"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBox.Style>
+                                    </TextBox>
+                                    
+                                    <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" 
+                                                Orientation="Horizontal">
+                                        <TextBlock Text="Дата приема:" Width="100" 
+                                                   Margin="0,0,10,0"/>
+                                        <DatePicker SelectedDate="{Binding EditingMaster.HireDate}" 
+                                                    Width="120"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Учетные данные -->
+                        <Border Background="#f0f8f0" Padding="15" CornerRadius="5" Margin="0,0,0,15">
+                            <StackPanel>
+                                <TextBlock Text="Учетные данные" 
+                                           FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    
+                                    <TextBlock Text="Логин:" Grid.Row="0" Grid.Column="0" 
+                                               Width="100" Margin="0,0,10,5"/>
+                                    <TextBox Text="{Binding EditingMaster.Username}" 
+                                             Grid.Row="0" Grid.Column="1">
+                                        <TextBox.Style>
+                                            <Style TargetType="TextBox">
+                                                <Style.Triggers>
+                                                    <Trigger Property="Validation.HasError" Value="true">
+                                                        <Setter Property="ToolTip" 
+                                                                Value="{Binding RelativeSource={x:Static RelativeSource.Self},
+                                                                        Path=(Validation.Errors)[0].ErrorContent}"/>
+                                                        <Setter Property="Background" Value="#fff0f0"/>
+                                                        <Setter Property="BorderBrush" Value="#ff9999"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBox.Style>
+                                    </TextBox>
+                                    
+                                    <TextBlock Text="Пароль:" Grid.Row="1" Grid.Column="0" 
+                                               Width="100" Margin="0,0,10,5"/>
+                                    <PasswordBox x:Name="PasswordBox" 
+                                                 Grid.Row="1" Grid.Column="1"
+                                                 PasswordChanged="PasswordBox_PasswordChanged"/>
+                                    
+                                    <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" 
+                                                Orientation="Horizontal" Margin="0,10,0,0">
+                                        <TextBlock Text="Статус:" Width="100" 
+                                                   Margin="0,0,10,0"/>
+                                        <CheckBox IsChecked="{Binding EditingMaster.IsActive}" 
+                                                  Content="Активный"
+                                                  VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Статистика -->
+                        <Border Background="#fff3cd" Padding="10" CornerRadius="5">
+                            <StackPanel>
+                                <TextBlock Text="Статистика" 
+                                           FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    
+                                    <TextBlock Text="Всего мастеров:" Grid.Row="0" Grid.Column="0"/>
+                                    <TextBlock Text="{Binding Masters.Count, Mode=OneWay}" 
+                                               Grid.Row="0" Grid.Column="1" 
+                                               FontWeight="Bold"/>
+                                    
+                                    <TextBlock Text="Активных:" Grid.Row="1" Grid.Column="0"/>
+                                    <TextBlock Text="{Binding ActiveMastersCount}" 
+                                               Grid.Row="1" Grid.Column="1" 
+                                               FontWeight="Bold"/>
+                                    
+                                    <TextBlock Text="Специализаций:" Grid.Row="2" Grid.Column="0"/>
+                                    <TextBlock Text="{Binding SpecializationsCount}" 
+                                               Grid.Row="2" Grid.Column="1" 
+                                               FontWeight="Bold"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
